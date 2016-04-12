@@ -1,0 +1,78 @@
+h1, h2, h3, h4, h5, h6 {
+	font-weight: bold;
+	color: #4E4E4E;
+}
+
+h1 {
+	font-size: 2em;
+}
+
+.chooseButton {
+	display: block;
+	font-size: 16pt;
+}
+
+.componentsVerticalPanel {
+	margin: 10px;
+}
+
+.generateChartButton {
+	margin: 20px 100px 10px 0px;
+}
+
+table {
+	height: 100%;
+	width: 100%;
+}
+
+.gwt-TabPanel {
+	display: table;
+	margin-top: 3px;
+}
+
+.gwt-TabBar {
+	padding-top: 1px;
+	border-bottom: 1px solid #878787;
+	background-color: #fff;
+}
+
+.gwt-TabBarItem {
+	padding: 2px;
+	cursor: pointer;
+	background-color: #e8e8e8;
+	margin-right: 2px;
+}
+
+.gwt-TabBarItem-selected {
+	border-bottom: 2px solid navy;
+	outline: #ffffff auto 0px !important;
+}
+
+.gwt-Label {
+	margin: 5px;
+}
+
+#chooseChartTypeLabel {
+	margin-top: 10px;
+}
+
+.gwt-RadioButton {
+	cursor: pointer;
+}
+
+.gwt-TextBox {
+	height: 13px;
+}
+
+/* .gwt-TextBox:FOCUS {  
+    border: 1px solid #FF0000;
+} */
+
+.gwt-DisclosurePanel, .gwt-DisclosurePanel-open, .gwt-DisclosurePanel-closed {
+	padding-bottom: 15px;
+	padding-top: 10px;
+}
+
+.gwt-HTML {
+	margin-left: 10px;
+}

@@ -1,0 +1,2 @@
+serviceClass: com.pwste.gwt.client.GreetingService
+path: FB353747DB8FD4BD15F67EEE40F99DC2.gwt.rpc
