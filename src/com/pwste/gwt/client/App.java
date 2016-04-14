@@ -176,9 +176,6 @@ public class App implements EntryPoint {
 		secondChartColourVerticalPanel.add(secondChartColourRadioButton4);
 		secondChartColourLabel.setVisible(false);
 		secondChartColourVerticalPanel.setVisible(false);
-		//
-		// --------------------------------
-		//
 		final Label backgroundChartColourLabel = new Label("Kolor tła wykresu:");
 		final RadioButton backgroundChartColourRadioButton1 = new RadioButton("backgroundChartColourRadioButtonsGroup",
 				"Domyślny");
@@ -392,13 +389,6 @@ public class App implements EntryPoint {
 			}
 		});
 
-		numberOfPointsIntegerBox.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				numberOfPointsIntegerBox.setValue(null);
-			}
-		});
-
 		chartTextTitleTextBox.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -538,34 +528,6 @@ public class App implements EntryPoint {
 				}
 			}
 		});
-
-		firstNumbersDownLimitIntegerBox.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				firstNumbersDownLimitIntegerBox.setValue(null);
-			}
-		});
-
-		firstNumbersUpperLimitIntegerBox.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				firstNumbersUpperLimitIntegerBox.setValue(null);
-			}
-		});
-
-		secondNumbersDownLimitIntegerBox.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				secondNumbersDownLimitIntegerBox.setValue(null);
-			}
-		});
-
-		secondNumbersUpperLimitIntegerBox.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				secondNumbersUpperLimitIntegerBox.setValue(null);
-			}
-		});
 	}
 
 	public Number[] randomPointsGenerator(int pointsQuantity, int downLimit, int upperLimit) {
@@ -594,8 +556,6 @@ public class App implements EntryPoint {
 		final Number[] numbersData = new Number[numberOfPoints];
 
 		for (int i = 0; i < numberOfPoints; i++) {
-			// numbersData[i] = Math.random() * (maximumValue - minimumValue) +
-			// minimumValue;
 			numbersData[i] = Random.nextInt(maximumValue - minimumValue) + minimumValue;
 		}
 
