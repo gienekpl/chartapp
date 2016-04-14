@@ -8,9 +8,9 @@ import org.moxieapps.gwt.highcharts.client.BaseChart;
 import org.moxieapps.gwt.highcharts.client.Chart;
 import org.moxieapps.gwt.highcharts.client.ChartSubtitle;
 import org.moxieapps.gwt.highcharts.client.ChartTitle;
-import org.moxieapps.gwt.highcharts.client.Credits;
 import org.moxieapps.gwt.highcharts.client.Legend;
 import org.moxieapps.gwt.highcharts.client.Series;
+import org.moxieapps.gwt.highcharts.client.Series.Type;
 import org.moxieapps.gwt.highcharts.client.Style;
 import org.moxieapps.gwt.highcharts.client.events.ChartClickEvent;
 import org.moxieapps.gwt.highcharts.client.events.ChartClickEventHandler;
@@ -29,6 +29,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.HTML;
@@ -59,6 +60,8 @@ public class App implements EntryPoint {
 	final String milkyColour = "#FFFFF0";
 	final String pearlyColour = "#FAFAE7";
 	final String blackColor = "#000000";
+	final Type linearChartType = Series.Type.SPLINE;
+	final Type columnChartType = Series.Type.COLUMN;
 	/**
 	 * The message displayed to the user when the server cannot be reached or
 	 * returns an error.
@@ -250,15 +253,15 @@ public class App implements EntryPoint {
 				appTabPanel.selectTab(2);
 
 				if (chartTypeRadioButton1.isChecked()) {
-					chartTabVerticalPanel.add(showLinearChart(chartTextTitleTextBox.getText(),
+					chartTabVerticalPanel.add(showSingleChart(chartTextTitleTextBox.getText(),
 							chartTextSubtitleTextBox.getText(), numberOfPointsIntegerBox.getValue(),
 							xAxisTextBox.getText(), yAxisTextBox.getText(), firstNumbersDownLimitIntegerBox.getValue(),
-							firstNumbersUpperLimitIntegerBox.getValue()));
+							firstNumbersUpperLimitIntegerBox.getValue(), linearChartType));
 				} else if (chartTypeRadioButton2.isChecked()) {
-					chartTabVerticalPanel.add(showColumnChart(chartTextTitleTextBox.getText(),
+					chartTabVerticalPanel.add(showSingleChart(chartTextTitleTextBox.getText(),
 							chartTextSubtitleTextBox.getText(), numberOfPointsIntegerBox.getValue(),
 							xAxisTextBox.getText(), yAxisTextBox.getText(), firstNumbersDownLimitIntegerBox.getValue(),
-							firstNumbersUpperLimitIntegerBox.getValue()));
+							firstNumbersUpperLimitIntegerBox.getValue(), columnChartType));
 				} else if (chartTypeRadioButton3.isChecked()) {
 					chartTabVerticalPanel.add(showDoubleCharts(chartTextTitleTextBox.getText(),
 							chartTextSubtitleTextBox.getText(), numberOfPointsIntegerBox.getValue(),
@@ -562,104 +565,75 @@ public class App implements EntryPoint {
 		return numbersData;
 	}
 
-	public Chart showLinearChart(String chartTitle, String chartSubtitle, int numberOfPoints, String xAxisText,
-			String yAxisText, int pointsDownLimit, int pointsUpperLimit) {
-		final Chart linearChart = new Chart();
-		linearChart.removeAllSeries();
-		linearChart.setType(Series.Type.LINE);
-		linearChart.setChartTitle(new ChartTitle().setText(chartTitle));
-		linearChart.setChartSubtitle(new ChartSubtitle().setText(chartSubtitle));
-		linearChart.setZoomType(BaseChart.ZoomType.X_AND_Y);
-		linearChart.setMarginRight(1);
-		linearChart.getXAxis().setAxisTitleText(xAxisText);
-		linearChart.getYAxis().setAxisTitleText(yAxisText);
-		linearChart.setBackgroundColor(backgroundColour);
-		linearChart.setAnimation(true);
+	public Chart showSingleChart(String chartTitle, String chartSubtitle, int numberOfPoints, String xAxisText,
+			String yAxisText, int pointsDownLimit, int pointsUpperLimit, Type chartType) {
+		final Chart singleChart = new Chart();
+		singleChart.setType(chartType);
+		final ChartTitle columnChartTitle = new ChartTitle();
+		columnChartTitle.setText(chartTitle);
+		singleChart.setChartTitle(columnChartTitle);
+		final ChartSubtitle columnChartSubtitle = new ChartSubtitle();
+		columnChartSubtitle.setText(chartSubtitle);
+		singleChart.setChartSubtitle(columnChartSubtitle);
+		singleChart.setZoomType(BaseChart.ZoomType.X_AND_Y);
+		final AxisTitle xTextAxisTitle = new AxisTitle();
+		xTextAxisTitle.setText(xAxisText);
+		singleChart.getXAxis().setAxisTitle(xTextAxisTitle);
+		final AxisTitle yTextAxisTitle = new AxisTitle();
+		yTextAxisTitle.setText(yAxisText);
+		singleChart.getYAxis().setAxisTitle(yTextAxisTitle);
+		singleChart.setBackgroundColor(backgroundColour);
+		singleChart.setAnimation(true);
 
-		final Series linearSeries = linearChart.createSeries();
-		linearSeries.setPoints(randomPointsGenerator(numberOfPoints, pointsDownLimit, pointsUpperLimit));
-		linearSeries.setPlotOptions(new ColumnPlotOptions().setColor(firstColour));
-		linearChart.addSeries(linearSeries);
+		final Series singleSeries = singleChart.createSeries();
+		singleSeries.setPoints(randomPointsGenerator(numberOfPoints, pointsDownLimit, pointsUpperLimit));
+		final ColumnPlotOptions seriesColourColumnPlotOptions = new ColumnPlotOptions();
+		seriesColourColumnPlotOptions.setColor(firstColour);
+		singleSeries.setPlotOptions(seriesColourColumnPlotOptions);
+		singleChart.addSeries(singleSeries);
 
-		linearChart.setSeriesPlotOptions(new SeriesPlotOptions().setLineWidth(1).setPointClickEventHandler(
-				new PointClickEventHandler() {
-					@Override
-					public boolean onClick(PointClickEvent pointClickEvent) {
-						final Series currentSeries = linearChart.getSeries(pointClickEvent.getSeriesId());
-
-						if (currentSeries.getPoints().length > 1) {
-							pointClickEvent.getPoint().remove();
-						}
-
-						return true;
-					}
-				}));
-
-		linearChart.setClickEventHandler(new ChartClickEventHandler() {
+		final SeriesPlotOptions deleteSinglePointSeriesPlotOptions = new SeriesPlotOptions();
+		deleteSinglePointSeriesPlotOptions.setLineWidth(1);
+		final PointClickEventHandler deletePointClickEventHandler = new PointClickEventHandler() {
 			@Override
-			public boolean onClick(ChartClickEvent chartClickEvent) {
-				linearSeries.addPoint(chartClickEvent.getXAxisValue(), chartClickEvent.getYAxisValue());
+			public boolean onClick(PointClickEvent pointClickEvent) {
+				final Series currentSeries = singleChart.getSeries(pointClickEvent.getSeriesId());
+
+				if (currentSeries.getPoints().length > 1) {
+					pointClickEvent.getPoint().remove();
+				} else if (currentSeries.getPoints().length == 1) {
+					Window.alert("Nie można usunąć ostatniego punktu!");
+				}
 
 				return true;
 			}
-		});
+		};
+		deleteSinglePointSeriesPlotOptions.setPointClickEventHandler(deletePointClickEventHandler);
+		singleChart.setSeriesPlotOptions(deleteSinglePointSeriesPlotOptions);
 
-		return linearChart;
-	}
-
-	public Chart showColumnChart(String chartTitle, String chartSubtitle, int numberOfPoints, String xAxisText,
-			String yAxisText, int pointsDownLimit, int pointsUpperLimit) {
-		final Chart columnChart = new Chart();
-		columnChart.removeAllSeries();
-		columnChart.setType(Series.Type.COLUMN);
-		columnChart.setChartTitle(new ChartTitle().setText(chartTitle));
-		columnChart.setChartSubtitle(new ChartSubtitle().setText(chartSubtitle));
-		columnChart.setZoomType(BaseChart.ZoomType.X_AND_Y);
-		columnChart.setMarginRight(1);
-		columnChart.getYAxis().setAxisTitleText(yAxisText);
-		columnChart.getXAxis().setAxisTitle(new AxisTitle().setText(xAxisText));
-		columnChart.getYAxis().setAxisTitle(new AxisTitle().setText(yAxisText));
-		columnChart.setBackgroundColor(backgroundColour);
-		columnChart.setAnimation(true);
-
-		final Series columnSeries = columnChart.createSeries();
-		columnSeries.setPoints(randomPointsGenerator(numberOfPoints, pointsDownLimit, pointsUpperLimit));
-		columnSeries.setPlotOptions(new ColumnPlotOptions().setColor(firstColour));
-		columnChart.addSeries(columnSeries);
-
-		columnChart.setSeriesPlotOptions(new SeriesPlotOptions().setLineWidth(1).setPointClickEventHandler(
-				new PointClickEventHandler() {
-					@Override
-					public boolean onClick(PointClickEvent pointClickEvent) {
-						final Series currentSeries = columnChart.getSeries(pointClickEvent.getSeriesId());
-
-						if (currentSeries.getPoints().length > 1) {
-							pointClickEvent.getPoint().remove();
-						}
-
-						return true;
-					}
-				}));
-
-		columnChart.setClickEventHandler(new ChartClickEventHandler() {
+		final ChartClickEventHandler addSinglePointChartClickEventHandler = new ChartClickEventHandler() {
 			@Override
 			public boolean onClick(ChartClickEvent chartClickEvent) {
-				columnSeries.addPoint(chartClickEvent.getXAxisValue(), chartClickEvent.getYAxisValue());
+				singleSeries.addPoint(chartClickEvent.getXAxisValue(), chartClickEvent.getYAxisValue());
 
 				return true;
 			}
-		});
+		};
+		singleChart.setClickEventHandler(addSinglePointChartClickEventHandler);
 
-		return columnChart;
+		return singleChart;
 	}
 
 	public Chart showDoubleCharts(String chartTitle, String chartSubtitle, int numberOfPoints, String xAxisText,
 			String firstYaxisText, String secondYaxisText, int pointsDownLimitFirst, int pointsUpperLimitFirst,
 			int pointsDownLimitSecond, int pointsUpperLimitSecond) {
 		final Chart doubleChart = new Chart();
-		doubleChart.removeAllSeries();
-		doubleChart.setChartTitle(new ChartTitle().setText(chartTitle));
-		doubleChart.setChartSubtitle(new ChartSubtitle().setText(chartSubtitle));
+		final ChartTitle doubleChartTitle = new ChartTitle();
+		doubleChartTitle.setText(chartTitle);
+		doubleChart.setChartTitle(doubleChartTitle);
+		final ChartSubtitle doubleChartSubtitle = new ChartSubtitle();
+		doubleChartSubtitle.setText(chartSubtitle);
+		doubleChart.setChartSubtitle(doubleChartSubtitle);
 		doubleChart.setZoomType(BaseChart.ZoomType.X_AND_Y);
 		doubleChart.setLegend(new Legend().setLayout(Legend.Layout.VERTICAL).setAlign(Legend.Align.LEFT)
 				.setVerticalAlign(Legend.VerticalAlign.TOP).setX(70).setY(45).setFloating(true)
@@ -683,25 +657,28 @@ public class App implements EntryPoint {
 
 	public Chart showLiveRandomChart(String chartTitle, String chartSubtitle, String xAxisText, String yAxisText,
 			int pointsDownLimit, int pointsUpperLimit) {
-		final Chart liveChart = new Chart();
-		liveChart.removeAllSeries();
-		liveChart.setType(Series.Type.SPLINE);
-		liveChart.setChartTitle(new ChartTitle().setText(chartTitle));
-		liveChart.setChartSubtitle(new ChartSubtitle().setText(chartSubtitle));
-		liveChart.setMarginRight(1);
-		liveChart.setBarPlotOptions(new BarPlotOptions().setDataLabels(new DataLabels().setEnabled(true)));
-		liveChart.setLegend(new Legend().setEnabled(false));
-		liveChart.setCredits(new Credits().setEnabled(false));
+		final Chart liveRandomChart = new Chart();
+		liveRandomChart.setType(Series.Type.SPLINE);
+		liveRandomChart.setChartSubtitle(new ChartSubtitle().setText(chartSubtitle));
+		final ChartTitle liveRandomChartTitle = new ChartTitle();
+		liveRandomChartTitle.setText(chartTitle);
+		liveRandomChart.setChartTitle(liveRandomChartTitle);
+		final ChartSubtitle liveRandomChartSubtitle = new ChartSubtitle();
+		liveRandomChartSubtitle.setText(chartSubtitle);
+		liveRandomChart.setChartSubtitle(liveRandomChartSubtitle);
+		liveRandomChart.setBarPlotOptions(new BarPlotOptions().setDataLabels(new DataLabels().setEnabled(true)));
 
-		liveChart.getXAxis().setAxisTitle(new AxisTitle().setText(xAxisText)).setType(Axis.Type.DATE_TIME)
+		liveRandomChart.getXAxis().setAxisTitle(new AxisTitle().setText(xAxisText)).setType(Axis.Type.DATE_TIME)
 				.setTickPixelInterval(50);
 
-		liveChart.getYAxis().setAxisTitle(new AxisTitle().setText(yAxisText))
-				.setPlotLines(liveChart.getYAxis().createPlotLine().setValue(0).setWidth(1).setColor(firstColour));
-		liveChart.setBackgroundColor(backgroundColour);
+		liveRandomChart
+				.getYAxis()
+				.setAxisTitle(new AxisTitle().setText(yAxisText))
+				.setPlotLines(liveRandomChart.getYAxis().createPlotLine().setValue(0).setWidth(1).setColor(firstColour));
+		liveRandomChart.setBackgroundColor(backgroundColour);
 
-		final Series liveSeries = liveChart.createSeries();
-		liveChart.addSeries(liveSeries);
+		final Series liveSeries = liveRandomChart.createSeries();
+		liveRandomChart.addSeries(liveSeries);
 
 		// final long time = new Date().getTime();
 		for (int i = -25; i < 0; i++) {
@@ -718,6 +695,6 @@ public class App implements EntryPoint {
 		};
 		temporaryTimer.scheduleRepeating(1000);
 
-		return liveChart;
+		return liveRandomChart;
 	}
 }
