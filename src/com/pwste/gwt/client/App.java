@@ -9,6 +9,7 @@ import org.moxieapps.gwt.highcharts.client.Chart;
 import org.moxieapps.gwt.highcharts.client.ChartSubtitle;
 import org.moxieapps.gwt.highcharts.client.ChartTitle;
 import org.moxieapps.gwt.highcharts.client.Legend;
+import org.moxieapps.gwt.highcharts.client.PlotLine;
 import org.moxieapps.gwt.highcharts.client.Series;
 import org.moxieapps.gwt.highcharts.client.Series.Type;
 import org.moxieapps.gwt.highcharts.client.Style;
@@ -16,15 +17,12 @@ import org.moxieapps.gwt.highcharts.client.events.ChartClickEvent;
 import org.moxieapps.gwt.highcharts.client.events.ChartClickEventHandler;
 import org.moxieapps.gwt.highcharts.client.events.PointClickEvent;
 import org.moxieapps.gwt.highcharts.client.events.PointClickEventHandler;
-import org.moxieapps.gwt.highcharts.client.labels.DataLabels;
 import org.moxieapps.gwt.highcharts.client.labels.YAxisLabels;
-import org.moxieapps.gwt.highcharts.client.plotOptions.BarPlotOptions;
 import org.moxieapps.gwt.highcharts.client.plotOptions.ColumnPlotOptions;
 import org.moxieapps.gwt.highcharts.client.plotOptions.SeriesPlotOptions;
 import org.moxieapps.gwt.highcharts.client.plotOptions.SplinePlotOptions;
 
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Random;
@@ -62,17 +60,20 @@ public class App implements EntryPoint {
 	final String blackColor = "#000000";
 	final Type linearChartType = Series.Type.SPLINE;
 	final Type columnChartType = Series.Type.COLUMN;
+
 	/**
 	 * The message displayed to the user when the server cannot be reached or
 	 * returns an error.
 	 */
-	private static final String SERVER_ERROR = "An error occurred while "
-			+ "attempting to contact the server. Please check your network connection and try again.";
+	// private static final String SERVER_ERROR = "An error occurred while "
+	// +
+	// "attempting to contact the server. Please check your network connection and try again.";
 	/**
 	 * Create a remote service proxy to talk to the server-side Greeting
 	 * service.
 	 */
-	private final GreetingServiceAsync greetingService = GWT.create(GreetingService.class);
+	// private final GreetingServiceAsync greetingService =
+	// GWT.create(GreetingService.class);
 
 	/**
 	 * This is the entry point method.
@@ -587,9 +588,9 @@ public class App implements EntryPoint {
 
 		final Series singleSeries = singleChart.createSeries();
 		singleSeries.setPoints(randomPointsGenerator(numberOfPoints, pointsDownLimit, pointsUpperLimit));
-		final ColumnPlotOptions seriesColourColumnPlotOptions = new ColumnPlotOptions();
-		seriesColourColumnPlotOptions.setColor(firstColour);
-		singleSeries.setPlotOptions(seriesColourColumnPlotOptions);
+		final SeriesPlotOptions seriesSeriesPlotOptions = new SeriesPlotOptions();
+		seriesSeriesPlotOptions.setColor(firstColour);
+		singleSeries.setPlotOptions(seriesSeriesPlotOptions);
 		singleChart.addSeries(singleSeries);
 
 		final SeriesPlotOptions deleteSinglePointSeriesPlotOptions = new SeriesPlotOptions();
@@ -625,7 +626,7 @@ public class App implements EntryPoint {
 	}
 
 	public Chart showDoubleCharts(String chartTitle, String chartSubtitle, int numberOfPoints, String xAxisText,
-			String firstYaxisText, String secondYaxisText, int pointsDownLimitFirst, int pointsUpperLimitFirst,
+			String firstYAxisText, String secondYAxisText, int pointsDownLimitFirst, int pointsUpperLimitFirst,
 			int pointsDownLimitSecond, int pointsUpperLimitSecond) {
 		final Chart doubleChart = new Chart();
 		final ChartTitle doubleChartTitle = new ChartTitle();
@@ -635,22 +636,55 @@ public class App implements EntryPoint {
 		doubleChartSubtitle.setText(chartSubtitle);
 		doubleChart.setChartSubtitle(doubleChartSubtitle);
 		doubleChart.setZoomType(BaseChart.ZoomType.X_AND_Y);
-		doubleChart.setLegend(new Legend().setLayout(Legend.Layout.VERTICAL).setAlign(Legend.Align.LEFT)
-				.setVerticalAlign(Legend.VerticalAlign.TOP).setX(70).setY(45).setFloating(true)
-				.setBackgroundColor(backgroundColour).setBorderColor(firstDefaultColour).setBorderWidth(1));
-		doubleChart.getXAxis().setAxisTitle(new AxisTitle().setText(xAxisText));
-		doubleChart.getYAxis(0).setAxisTitle(new AxisTitle().setText(firstYaxisText))
-				.setLabels(new YAxisLabels().setStyle(new Style().setColor(firstColour)));
-		doubleChart.getYAxis(1).setAxisTitle(new AxisTitle().setText(secondYaxisText)).setOpposite(true)
-				.setLabels(new YAxisLabels().setStyle(new Style().setColor(secondColour)));
+		final Legend doubleLegend = new Legend();
+		doubleLegend.setLayout(Legend.Layout.VERTICAL);
+		doubleLegend.setAlign(Legend.Align.LEFT);
+		doubleLegend.setVerticalAlign(Legend.VerticalAlign.TOP);
+		doubleLegend.setX(70);
+		doubleLegend.setY(45);
+		doubleLegend.setFloating(true);
+		doubleLegend.setBackgroundColor(whiteColour);
+		doubleLegend.setBorderColor(firstDefaultColour);
+		doubleLegend.setBorderWidth(1);
+		doubleChart.setLegend(doubleLegend);
+		final AxisTitle xTextAxisTitle = new AxisTitle();
+		xTextAxisTitle.setText(xAxisText);
+		doubleChart.getXAxis().setAxisTitle(xTextAxisTitle);
+		final AxisTitle y0AxisTitle = new AxisTitle();
+		final YAxisLabels y0AxisLabels = new YAxisLabels();
+		final Style y0Style = new Style();
+		y0Style.setColor(firstColour);
+		y0AxisLabels.setStyle(y0Style);
+		y0AxisTitle.setText(firstYAxisText);
+		doubleChart.getYAxis(0).setLabels(y0AxisLabels);
+		doubleChart.getYAxis(0).setAxisTitle(y0AxisTitle);
+		final AxisTitle y1AxisTitle = new AxisTitle();
+		final YAxisLabels y1AxisLabels = new YAxisLabels();
+		final Style y1Style = new Style();
+		y1Style.setColor(secondColour);
+		y1AxisLabels.setStyle(y1Style);
+		y1AxisTitle.setText(secondYAxisText);
+		doubleChart.getYAxis(1).setLabels(y1AxisLabels);
+		doubleChart.getYAxis(1).setAxisTitle(y1AxisTitle);
+		doubleChart.getYAxis(1).setOpposite(true);
 		doubleChart.setBackgroundColor(backgroundColour);
 
-		doubleChart.addSeries(doubleChart.createSeries().setName(firstYaxisText).setType(Series.Type.COLUMN)
-				.setPlotOptions(new ColumnPlotOptions().setColor(firstColour)).setYAxis(1)
-				.setPoints(randomPointsGenerator(numberOfPoints, pointsDownLimitFirst, pointsUpperLimitFirst)));
-		doubleChart.addSeries(doubleChart.createSeries().setName(secondYaxisText).setType(Series.Type.SPLINE)
-				.setPlotOptions(new SplinePlotOptions().setColor(secondColour))
-				.setPoints(randomPointsGenerator(numberOfPoints, pointsDownLimitSecond, pointsUpperLimitSecond)));
+		final Series y0Series = doubleChart.createSeries();
+		y0Series.setPoints(randomPointsGenerator(numberOfPoints, pointsDownLimitFirst, pointsUpperLimitFirst));
+		final ColumnPlotOptions y0ColumnPlotOptions = new ColumnPlotOptions();
+		y0ColumnPlotOptions.setColor(firstColour);
+		y0Series.setPlotOptions(y0ColumnPlotOptions);
+		y0Series.setType(columnChartType);
+		y0Series.setYAxis(1);
+		doubleChart.addSeries(y0Series);
+
+		final Series y1Series = doubleChart.createSeries();
+		y1Series.setPoints(randomPointsGenerator(numberOfPoints, pointsDownLimitSecond, pointsUpperLimitSecond));
+		final SplinePlotOptions y1SplinePlotOptions = new SplinePlotOptions();
+		y1SplinePlotOptions.setColor(firstColour);
+		y1Series.setPlotOptions(y1SplinePlotOptions);
+		y1Series.setType(linearChartType);
+		doubleChart.addSeries(y1Series);
 
 		return doubleChart;
 	}
@@ -658,42 +692,48 @@ public class App implements EntryPoint {
 	public Chart showLiveRandomChart(String chartTitle, String chartSubtitle, String xAxisText, String yAxisText,
 			int pointsDownLimit, int pointsUpperLimit) {
 		final Chart liveRandomChart = new Chart();
-		liveRandomChart.setType(Series.Type.SPLINE);
-		liveRandomChart.setChartSubtitle(new ChartSubtitle().setText(chartSubtitle));
 		final ChartTitle liveRandomChartTitle = new ChartTitle();
 		liveRandomChartTitle.setText(chartTitle);
 		liveRandomChart.setChartTitle(liveRandomChartTitle);
-		final ChartSubtitle liveRandomChartSubtitle = new ChartSubtitle();
-		liveRandomChartSubtitle.setText(chartSubtitle);
-		liveRandomChart.setChartSubtitle(liveRandomChartSubtitle);
-		liveRandomChart.setBarPlotOptions(new BarPlotOptions().setDataLabels(new DataLabels().setEnabled(true)));
+		final ChartSubtitle liveRandomChartSubitle = new ChartSubtitle();
+		liveRandomChartSubitle.setText(chartSubtitle);
+		liveRandomChart.setChartSubtitle(liveRandomChartSubitle);
+		liveRandomChart.setType(linearChartType);
 
-		liveRandomChart.getXAxis().setAxisTitle(new AxisTitle().setText(xAxisText)).setType(Axis.Type.DATE_TIME)
-				.setTickPixelInterval(50);
+		final AxisTitle liveRandomXAxisTitle = new AxisTitle();
+		liveRandomXAxisTitle.setText(xAxisText);
+		liveRandomChart.getXAxis().setTickPixelInterval(75);
+		liveRandomChart.getXAxis().setType(Axis.Type.DATE_TIME);
+		liveRandomChart.getXAxis().setAxisTitle(liveRandomXAxisTitle);
 
-		liveRandomChart
-				.getYAxis()
-				.setAxisTitle(new AxisTitle().setText(yAxisText))
-				.setPlotLines(liveRandomChart.getYAxis().createPlotLine().setValue(0).setWidth(1).setColor(firstColour));
+		final PlotLine liveRandomPlotLine = liveRandomChart.getYAxis().createPlotLine();
+		liveRandomPlotLine.setValue(0);
+		liveRandomPlotLine.setWidth(1);
+		liveRandomPlotLine.setColor(firstColour);
+		liveRandomChart.getYAxis().setPlotLines(liveRandomPlotLine);
+		final AxisTitle liveRandomYAxisTitle = new AxisTitle();
+		liveRandomYAxisTitle.setText(yAxisText);
+		liveRandomChart.getYAxis().setAxisTitle(liveRandomYAxisTitle);
 		liveRandomChart.setBackgroundColor(backgroundColour);
 
-		final Series liveSeries = liveRandomChart.createSeries();
-		liveRandomChart.addSeries(liveSeries);
+		final Series liveRandomSeries = liveRandomChart.createSeries();
+		liveRandomChart.addSeries(liveRandomSeries);
 
-		// final long time = new Date().getTime();
 		for (int i = -25; i < 0; i++) {
-			liveSeries.addPoint(new Date().getTime() + i * 1000, Random.nextInt());
+			liveRandomSeries.addPoint(new Date().getTime() + i * 1000, Random.nextInt());
 		}
 
-		liveSeries.setPlotOptions(new ColumnPlotOptions().setColor(firstColour));
+		final SplinePlotOptions liveRandomSplinePlotOptions = new SplinePlotOptions();
+		liveRandomSplinePlotOptions.setColor(firstColour);
+		liveRandomSeries.setPlotOptions(liveRandomSplinePlotOptions);
 
-		final Timer temporaryTimer = new Timer() {
+		final Timer liveRandomChartTimer = new Timer() {
 			@Override
 			public void run() {
-				liveSeries.addPoint(new Date().getTime(), Random.nextInt(), true, true, true);
+				liveRandomSeries.addPoint(new Date().getTime(), Random.nextInt(), true, false, true);
 			}
 		};
-		temporaryTimer.scheduleRepeating(1000);
+		liveRandomChartTimer.scheduleRepeating(1000);
 
 		return liveRandomChart;
 	}
