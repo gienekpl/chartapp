@@ -4,4 +4,4 @@ gaeDatanucleusVersion=v2
 gaeHrdEnabled=true
 googleCloudSqlEnabled=false
 localDevMySqlEnabled=true
-validationExclusions=
+validationExclusions=src/com/pwste/gwt/client/FileUploadServlet.java|src/com/pwste/gwt/server/FileUploadServlet.java|src/com/pwste/gwt/server/uploadServlet.java

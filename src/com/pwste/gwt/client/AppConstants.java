@@ -74,4 +74,6 @@ public interface AppConstants extends Constants {
     String DeleteLastPointAlert();
 
     String SelectLanguage();
+
+    String InvalidSymbol();
 }
