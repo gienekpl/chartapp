@@ -7,22 +7,13 @@
 
   <!-- Servlets -->
   <servlet>
-  	<servlet-name>uploadServlet</servlet-name>
-  	<servlet-class>com.pwste.gwt.server.FileUploadServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-  	<servlet-name>uploadServlet</servlet-name>
-  	<url-pattern>/app/upload</url-pattern>
-  </servlet-mapping>
-<!--   <servlet>
     <servlet-name>greetServlet</servlet-name>
     <servlet-class>com.pwste.gwt.server.GreetingServiceImpl</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>greetServlet</servlet-name>
     <url-pattern>/app/greet</url-pattern>
-  </servlet-mapping> -->
-
+  </servlet-mapping>
   
   <!-- Default page to serve -->
   <welcome-file-list>
