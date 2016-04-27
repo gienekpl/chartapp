@@ -76,4 +76,10 @@ public interface AppConstants extends Constants {
     String SelectLanguage();
 
     String InvalidSymbol();
+
+    String EmptyString();
+
+    String BackToFirstTab();
+
+    String OnlyFiveCharts();
 }

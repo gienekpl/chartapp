@@ -28,12 +28,16 @@ table {
 .gwt-TabPanel {
 	display: table;
 	margin-top: 3px;
+	max-height: 600px;
+	max-width: 1485px;
 }
 
 .gwt-TabBar {
 	padding-top: 1px;
 	border-bottom: 1px solid #878787;
 	background-color: #fff;
+	max-height: 600px;
+	max-width: 1485px;
 }
 
 .gwt-TabBarItem {
@@ -64,11 +68,12 @@ table {
 	height: 13px;
 }
 
-/* .gwt-TextBox:FOCUS {  
-    border: 1px solid #FF0000;
-} */
+.gwt-TextBox:FOCUS {
+	border: 1px solid #FFFF00;
+}
 
-.gwt-DisclosurePanel, .gwt-DisclosurePanel-open, .gwt-DisclosurePanel-closed {
+.gwt-DisclosurePanel, .gwt-DisclosurePanel-open,
+	.gwt-DisclosurePanel-closed {
 	padding-bottom: 15px;
 	padding-top: 10px;
 }
@@ -80,3 +85,8 @@ table {
 .gwt-Anchor {
 	margin: 5px;
 }
+
+/* .gwt-TabBarItem, .gwt-TabBarItem-disabled, .gwt-TabBarItem-wrapper,
+	.gwt-TabBarItem-wrapper-disabled, .gwt-TabBarItem-selected {
+	width: 200px;
+} */
