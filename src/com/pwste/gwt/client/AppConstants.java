@@ -87,5 +87,5 @@ public interface AppConstants extends Constants {
 
     String BackToFirstTab();
 
-    String OnlyFiveCharts();
+    String OnlyTenCharts();
 }

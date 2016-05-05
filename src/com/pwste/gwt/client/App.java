@@ -297,7 +297,7 @@ public class App implements EntryPoint {
 	    @Override
 	    public void onClick(ClickEvent event) {
 		if (chartIterator >= maxChartQuantity) {
-		    Window.alert(AppConstants.OnlyFiveCharts());
+		    Window.alert(AppConstants.OnlyTenCharts());
 		} else {
 		    isPositiveIntTextBox(numberOfPointsTextBox);
 		    isIntTextBox(firstNumbersDownLimitTextBox);
@@ -898,25 +898,25 @@ public class App implements EntryPoint {
     final public Chart showDataSingleChart(String chartTitle,
 	    String chartSubtitle, String xAxisText, String yAxisText,
 	    Type chartType) throws IOException {
-	final Chart dataChart = new Chart();
-	dataChart.setType(chartType);
+	final Chart dataSingleChart = new Chart();
+	dataSingleChart.setType(chartType);
 	final ChartTitle columnChartTitle = new ChartTitle();
 	columnChartTitle.setText(chartTitle);
-	dataChart.setChartTitle(columnChartTitle);
+	dataSingleChart.setChartTitle(columnChartTitle);
 	final ChartSubtitle columnChartSubtitle = new ChartSubtitle();
 	columnChartSubtitle.setText(chartSubtitle);
-	dataChart.setChartSubtitle(columnChartSubtitle);
-	dataChart.setZoomType(BaseChart.ZoomType.X_AND_Y);
+	dataSingleChart.setChartSubtitle(columnChartSubtitle);
+	dataSingleChart.setZoomType(BaseChart.ZoomType.X_AND_Y);
 	final AxisTitle xTextAxisTitle = new AxisTitle();
 	xTextAxisTitle.setText(xAxisText);
-	dataChart.getXAxis().setAxisTitle(xTextAxisTitle);
+	dataSingleChart.getXAxis().setAxisTitle(xTextAxisTitle);
 	final AxisTitle yTextAxisTitle = new AxisTitle();
 	yTextAxisTitle.setText(yAxisText);
-	dataChart.getYAxis().setAxisTitle(yTextAxisTitle);
-	dataChart.setBackgroundColor(backgroundColour);
-	dataChart.setAnimation(true);
+	dataSingleChart.getYAxis().setAxisTitle(yTextAxisTitle);
+	dataSingleChart.setBackgroundColor(backgroundColour);
+	dataSingleChart.setAnimation(true);
 
-	final Series singleSeries = dataChart.createSeries();
+	final Series singleSeries = dataSingleChart.createSeries();
 	firstDataPointsService.getDataPoints(new AsyncCallback<Number[]>() {
 	    @Override
 	    public void onFailure(Throwable caught) {
@@ -931,14 +931,14 @@ public class App implements EntryPoint {
 	final SeriesPlotOptions seriesSeriesPlotOptions = new SeriesPlotOptions();
 	seriesSeriesPlotOptions.setColor(firstColour);
 	singleSeries.setPlotOptions(seriesSeriesPlotOptions);
-	dataChart.addSeries(singleSeries);
+	dataSingleChart.addSeries(singleSeries);
 
 	final SeriesPlotOptions deleteSinglePointSeriesPlotOptions = new SeriesPlotOptions();
 	deleteSinglePointSeriesPlotOptions.setLineWidth(1);
 	final PointClickEventHandler deletePointClickEventHandler = new PointClickEventHandler() {
 	    @Override
 	    public boolean onClick(PointClickEvent pointClickEvent) {
-		final Series currentSeries = dataChart
+		final Series currentSeries = dataSingleChart
 			.getSeries(pointClickEvent.getSeriesId());
 
 		if (currentSeries.getPoints().length > 1) {
@@ -952,7 +952,8 @@ public class App implements EntryPoint {
 	};
 	deleteSinglePointSeriesPlotOptions
 		.setPointClickEventHandler(deletePointClickEventHandler);
-	dataChart.setSeriesPlotOptions(deleteSinglePointSeriesPlotOptions);
+	dataSingleChart
+		.setSeriesPlotOptions(deleteSinglePointSeriesPlotOptions);
 
 	final ChartClickEventHandler addSinglePointChartClickEventHandler = new ChartClickEventHandler() {
 	    @Override
@@ -963,9 +964,10 @@ public class App implements EntryPoint {
 		return true;
 	    }
 	};
-	dataChart.setClickEventHandler(addSinglePointChartClickEventHandler);
+	dataSingleChart
+		.setClickEventHandler(addSinglePointChartClickEventHandler);
 
-	return dataChart;
+	return dataSingleChart;
     }
 
     public Chart showDoubleCharts(String chartTitle, String chartSubtitle,
@@ -1043,14 +1045,14 @@ public class App implements EntryPoint {
     public Chart showDataDoubleCharts(String chartTitle, String chartSubtitle,
 	    String xAxisText, String firstYAxisText, String secondYAxisText)
 	    throws IOException {
-	final Chart doubleChart = new Chart();
+	final Chart dataDoubleChart = new Chart();
 	final ChartTitle doubleChartTitle = new ChartTitle();
 	doubleChartTitle.setText(chartTitle);
-	doubleChart.setChartTitle(doubleChartTitle);
+	dataDoubleChart.setChartTitle(doubleChartTitle);
 	final ChartSubtitle doubleChartSubtitle = new ChartSubtitle();
 	doubleChartSubtitle.setText(chartSubtitle);
-	doubleChart.setChartSubtitle(doubleChartSubtitle);
-	doubleChart.setZoomType(BaseChart.ZoomType.X_AND_Y);
+	dataDoubleChart.setChartSubtitle(doubleChartSubtitle);
+	dataDoubleChart.setZoomType(BaseChart.ZoomType.X_AND_Y);
 	final Legend doubleLegend = new Legend();
 	doubleLegend.setLayout(Legend.Layout.VERTICAL);
 	doubleLegend.setAlign(Legend.Align.LEFT);
@@ -1061,30 +1063,30 @@ public class App implements EntryPoint {
 	doubleLegend.setBackgroundColor(whiteColour);
 	doubleLegend.setBorderColor(firstDefaultColour);
 	doubleLegend.setBorderWidth(1);
-	doubleChart.setLegend(doubleLegend);
+	dataDoubleChart.setLegend(doubleLegend);
 	final AxisTitle xTextAxisTitle = new AxisTitle();
 	xTextAxisTitle.setText(xAxisText);
-	doubleChart.getXAxis().setAxisTitle(xTextAxisTitle);
+	dataDoubleChart.getXAxis().setAxisTitle(xTextAxisTitle);
 	final AxisTitle y0AxisTitle = new AxisTitle();
 	final YAxisLabels y0AxisLabels = new YAxisLabels();
 	final Style y0Style = new Style();
 	y0Style.setColor(firstColour);
 	y0AxisLabels.setStyle(y0Style);
 	y0AxisTitle.setText(firstYAxisText);
-	doubleChart.getYAxis(0).setLabels(y0AxisLabels);
-	doubleChart.getYAxis(0).setAxisTitle(y0AxisTitle);
+	dataDoubleChart.getYAxis(0).setLabels(y0AxisLabels);
+	dataDoubleChart.getYAxis(0).setAxisTitle(y0AxisTitle);
 	final AxisTitle y1AxisTitle = new AxisTitle();
 	final YAxisLabels y1AxisLabels = new YAxisLabels();
 	final Style y1Style = new Style();
 	y1Style.setColor(secondColour);
 	y1AxisLabels.setStyle(y1Style);
 	y1AxisTitle.setText(secondYAxisText);
-	doubleChart.getYAxis(1).setLabels(y1AxisLabels);
-	doubleChart.getYAxis(1).setAxisTitle(y1AxisTitle);
-	doubleChart.getYAxis(1).setOpposite(true);
-	doubleChart.setBackgroundColor(backgroundColour);
+	dataDoubleChart.getYAxis(1).setLabels(y1AxisLabels);
+	dataDoubleChart.getYAxis(1).setAxisTitle(y1AxisTitle);
+	dataDoubleChart.getYAxis(1).setOpposite(true);
+	dataDoubleChart.setBackgroundColor(backgroundColour);
 
-	final Series y0Series = doubleChart.createSeries();
+	final Series y0Series = dataDoubleChart.createSeries();
 	firstDataPointsService.getDataPoints(new AsyncCallback<Number[]>() {
 	    @Override
 	    public void onFailure(Throwable caught) {
@@ -1101,9 +1103,9 @@ public class App implements EntryPoint {
 	y0Series.setPlotOptions(y0ColumnPlotOptions);
 	y0Series.setType(columnChartType);
 	y0Series.setYAxis(1);
-	doubleChart.addSeries(y0Series);
+	dataDoubleChart.addSeries(y0Series);
 
-	final Series y1Series = doubleChart.createSeries();
+	final Series y1Series = dataDoubleChart.createSeries();
 	secondDataPointsService.getDataPoints(new AsyncCallback<Number[]>() {
 	    @Override
 	    public void onFailure(Throwable caught) {
@@ -1119,9 +1121,9 @@ public class App implements EntryPoint {
 	y1SplinePlotOptions.setColor(secondColour);
 	y1Series.setPlotOptions(y1SplinePlotOptions);
 	y1Series.setType(linearChartType);
-	doubleChart.addSeries(y1Series);
+	dataDoubleChart.addSeries(y1Series);
 
-	return doubleChart;
+	return dataDoubleChart;
     }
 
     public Chart showLiveRandomChart(String chartTitle, String chartSubtitle,
