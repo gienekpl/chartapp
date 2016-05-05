@@ -5,11 +5,17 @@ import com.google.gwt.i18n.client.Constants;
 public interface AppConstants extends Constants {
     String SelectChartType();
 
+    String LinearWithData();
+
+    String ColumnWithData();
+
     String Linear();
 
     String Column();
 
     String LinearAndColumn();
+
+    String LinearAndColumnWithData();
 
     String RandomDataInRealTime();
 

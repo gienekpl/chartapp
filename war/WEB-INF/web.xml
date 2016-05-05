@@ -1,32 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
               http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
-         version="2.5"
-         xmlns="http://java.sun.com/xml/ns/javaee">
+	version="2.5" xmlns="http://java.sun.com/xml/ns/javaee">
 
-  <!-- Servlets -->
-  <servlet>
-  	<servlet-name>uploadServlet</servlet-name>
-  	<servlet-class>com.pwste.gwt.server.FileUploadServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-  	<servlet-name>uploadServlet</servlet-name>
-  	<url-pattern>/app/upload</url-pattern>
-  </servlet-mapping>
-<!--   <servlet>
-    <servlet-name>greetServlet</servlet-name>
-    <servlet-class>com.pwste.gwt.server.GreetingServiceImpl</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>greetServlet</servlet-name>
-    <url-pattern>/app/greet</url-pattern>
-  </servlet-mapping> -->
+	<!-- Servlets -->
+	<servlet>
+		<servlet-name>firstDataPointsImpl</servlet-name>
+		<servlet-class>com.pwste.gwt.server.FirstDataPointsImpl</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>firstDataPointsImpl</servlet-name>
+		<url-pattern>/app/firstDataPoints</url-pattern>
+	</servlet-mapping>
+	
+	<servlet>
+		<servlet-name>secondDataPointsImpl</servlet-name>
+		<servlet-class>com.pwste.gwt.server.SecondDataPointsImpl</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>secondDataPointsImpl</servlet-name>
+		<url-pattern>/app/secondDataPoints</url-pattern>
+	</servlet-mapping>
 
-  
-  <!-- Default page to serve -->
-  <welcome-file-list>
-    <welcome-file>App.html</welcome-file>
-  </welcome-file-list>
+	<!-- Default page to serve -->
+	<welcome-file-list>
+		<welcome-file>App.html</welcome-file>
+	</welcome-file-list>
 
 </web-app>

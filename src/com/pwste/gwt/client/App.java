@@ -1,5 +1,6 @@
 package com.pwste.gwt.client;
 
+import java.io.IOException;
 import java.util.Date;
 
 import org.moxieapps.gwt.highcharts.client.Axis;
@@ -24,19 +25,15 @@ import org.moxieapps.gwt.highcharts.client.plotOptions.SplinePlotOptions;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DisclosurePanel;
-import com.google.gwt.user.client.ui.FileUpload;
-import com.google.gwt.user.client.ui.FormPanel;
-import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteEvent;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RadioButton;
@@ -46,13 +43,13 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class App implements EntryPoint {
-    public static int DOWN_LIMIT = 0;
-    public static int UPPER_LIMIT = 100;
-    public static int POINTS = 10000;
+    final public static int DOWN_LIMIT = 0;
+    final public static int UPPER_LIMIT = 100;
+    final public static int POINTS = 10000;
 
-    public String firstColour;
-    public String secondColour;
-    public String backgroundColour;
+    public static String firstColour;
+    public static String secondColour;
+    public static String backgroundColour;
     final static String firstDefaultColour = "#7CB5EC";
     final static String secondDefaultColour = "#434348";
     final static String redColour = "#FF0000";
@@ -63,28 +60,22 @@ public class App implements EntryPoint {
     final static String pearlyColour = "#FAFAE7";
     final static String blackColor = "#000000";
 
-    final Type linearChartType = Series.Type.SPLINE;
-    final Type columnChartType = Series.Type.COLUMN;
+    final static Type linearChartType = Series.Type.SPLINE;
+    final static Type columnChartType = Series.Type.COLUMN;
 
-    final static String regexString = "^[0-9]([0-9]*)$";/* "[0-9]+" *//* "\\d+" */
+    final static String positiveIntRegexString = "^[0-9]([0-9]*)$";
+    // final static String allIntRegexString = "^-?[0-9]([0-9]*)$";
+    final static String allIntRegexString = "^-?[0-9]\\d*(\\.\\d+)?$";
+    final static String emptyRegexString = "^\\s*$";
 
     int chartIterator = 0;
+    int maxChartQuantity = 10;
 
     private final AppConstants AppConstants = GWT.create(AppConstants.class);
-
-    // /**
-    // * The message displayed to the user when the server cannot be reached or
-    // * returns an error.
-    // */
-    // private static final String SERVER_ERROR = "An error occurred while "
-    // +
-    // "attempting to contact the server. Please check your network connection and try again.";
-    // /**
-    // * Create a remote service proxy to talk to the server-side Greeting
-    // * service.
-    // */
-    // private final GreetingServiceAsync greetingService = GWT
-    // .create(GreetingService.class);
+    protected static FirstDataPointsAsync firstDataPointsService = GWT
+	    .create(FirstDataPoints.class);
+    protected static SecondDataPointsAsync secondDataPointsService = GWT
+	    .create(SecondDataPoints.class);
 
     @Override
     public void onModuleLoad() {
@@ -97,10 +88,17 @@ public class App implements EntryPoint {
 	final RadioButton chartTypeRadioButton1 = new RadioButton(
 		"chartTypeRadioButtonsGroup", AppConstants.Linear());
 	final RadioButton chartTypeRadioButton2 = new RadioButton(
-		"chartTypeRadioButtonsGroup", AppConstants.Column());
+		"chartTypeRadioButtonsGroup", AppConstants.LinearWithData());
 	final RadioButton chartTypeRadioButton3 = new RadioButton(
-		"chartTypeRadioButtonsGroup", AppConstants.LinearAndColumn());
+		"chartTypeRadioButtonsGroup", AppConstants.Column());
 	final RadioButton chartTypeRadioButton4 = new RadioButton(
+		"chartTypeRadioButtonsGroup", AppConstants.ColumnWithData());
+	final RadioButton chartTypeRadioButton5 = new RadioButton(
+		"chartTypeRadioButtonsGroup", AppConstants.LinearAndColumn());
+	final RadioButton chartTypeRadioButton6 = new RadioButton(
+		"chartTypeRadioButtonsGroup",
+		AppConstants.LinearAndColumnWithData());
+	final RadioButton chartTypeRadioButton7 = new RadioButton(
 		"chartTypeRadioButtonsGroup",
 		AppConstants.RandomDataInRealTime());
 	chartTypeRadioButton1.setValue(true);
@@ -109,6 +107,9 @@ public class App implements EntryPoint {
 	chartTypeRadioButtonsVerticalPanel.add(chartTypeRadioButton2);
 	chartTypeRadioButtonsVerticalPanel.add(chartTypeRadioButton3);
 	chartTypeRadioButtonsVerticalPanel.add(chartTypeRadioButton4);
+	chartTypeRadioButtonsVerticalPanel.add(chartTypeRadioButton5);
+	chartTypeRadioButtonsVerticalPanel.add(chartTypeRadioButton6);
+	chartTypeRadioButtonsVerticalPanel.add(chartTypeRadioButton7);
 
 	final DisclosurePanel chartPropertiesDisclosurePanel = new DisclosurePanel(
 		AppConstants.ChartProperties());
@@ -258,71 +259,7 @@ public class App implements EntryPoint {
 	componentsVerticalPanel.add(chartTypeRadioButtonsVerticalPanel);
 	componentsVerticalPanel.add(chartPropertiesDisclosurePanel);
 	componentsVerticalPanel.add(generateChartButton);
-	// --------------------------------------------------------
-	// --------------------------------------------------------
-	final String UPLOAD_ACTION_URL = GWT.getModuleBaseURL() + "upload";
 
-	final FormPanel fp = new FormPanel();
-	final FileUpload fu = new FileUpload();
-	final Button b = new Button("wrzuc");
-
-	fp.setAction(UPLOAD_ACTION_URL);
-	fp.setEncoding(FormPanel.ENCODING_MULTIPART);
-	fp.setMethod(FormPanel.METHOD_POST);
-
-	fp.setWidget(fu);
-	componentsVerticalPanel.add(fp);
-	componentsVerticalPanel.add(b);
-
-	b.addClickHandler(new ClickHandler() {
-	    @Override
-	    public void onClick(ClickEvent event) {
-		fp.submit();
-	    }
-	});
-
-	fp.addSubmitCompleteHandler(new FormPanel.SubmitCompleteHandler() {
-	    @Override
-	    public void onSubmitComplete(SubmitCompleteEvent event) {
-		Window.alert(event.getResults() + fu.getFilename());
-	    }
-	});
-	// --------------------------------------------------------
-	// --------------------------------------------------------
-	final Button b0 = new Button("zamknij wykresy");
-	// b0.setVisible(false);
-	componentsVerticalPanel.add(b0);
-
-	// b0.addClickListener(new ClickListener() {
-	// @Override
-	// public void onClick(Widget sender) {
-	// if (chartIterator > 0) {
-	// for (int i = 2; i == chartIterator; i++) {
-	// appTabPanel.getTabBar().removeTab(i);
-	// }
-	//
-	// appTabPanel.selectTab(0);
-	// } else {
-	// Window.alert("brak otwartych wykresow");
-	// }
-	// }
-	// });
-
-	b0.addClickHandler(new ClickHandler() {
-	    @Override
-	    public void onClick(ClickEvent event) {
-		if (chartIterator > 0) {
-		    for (int i = 2; i <= chartIterator; i++) {
-			appTabPanel.getTabBar().removeTab(i);
-		    }
-		    appTabPanel.selectTab(0);
-		} else {
-		    Window.alert("brak otwartych wykresow");
-		}
-	    }
-	});
-	// --------------------------------------------------------
-	// --------------------------------------------------------
 	appTabPanel.add(componentsVerticalPanel, AppConstants.ChartsApp());
 	final VerticalPanel informationVerticalPanel = new VerticalPanel();
 	final HTML infoHTML = new HTML(
@@ -334,7 +271,6 @@ public class App implements EntryPoint {
 			+ "<h3><a href=\"http://www.gwtproject.org/\" target=\"_blank\">Google Web Toolkit</a></h3>"
 			+ "<h4>oraz</h4>"
 			+ "<h3><a href=\"http://www.moxiegroup.com/moxieapps/gwt-highcharts/\" target=\"_blank\">GWT Highcharts</a>.</h3>");
-	final VerticalPanel selectLanguageHorizontalPanel = new VerticalPanel();
 	final Label selectLanguageLabel = new Label(
 		AppConstants.SelectLanguage());
 	final Anchor polishLanguageAnchor = new Anchor("Polski",
@@ -347,26 +283,25 @@ public class App implements EntryPoint {
 		GWT.getHostPageBaseURL() + "?locale=es");
 	final Anchor russianLanguageAnchor = new Anchor("Русский",
 		GWT.getHostPageBaseURL() + "?locale=ru");
-	selectLanguageHorizontalPanel.add(selectLanguageLabel);
-	selectLanguageHorizontalPanel.add(polishLanguageAnchor);
-	selectLanguageHorizontalPanel.add(englishLanguageAnchor);
-	selectLanguageHorizontalPanel.add(germanLanguageAnchor);
-	selectLanguageHorizontalPanel.add(spanishLanguageAnchor);
-	selectLanguageHorizontalPanel.add(russianLanguageAnchor);
 	informationVerticalPanel.add(infoHTML);
-	informationVerticalPanel.add(selectLanguageHorizontalPanel);
+	informationVerticalPanel.add(selectLanguageLabel);
+	informationVerticalPanel.add(polishLanguageAnchor);
+	informationVerticalPanel.add(englishLanguageAnchor);
+	informationVerticalPanel.add(germanLanguageAnchor);
+	informationVerticalPanel.add(spanishLanguageAnchor);
+	informationVerticalPanel.add(russianLanguageAnchor);
 	appTabPanel.add(informationVerticalPanel, AppConstants.Information());
 	appTabPanel.selectTab(0);
 
 	generateChartButton.addClickHandler(new ClickHandler() {
 	    @Override
 	    public void onClick(ClickEvent event) {
-		if (chartIterator >= 5) {
+		if (chartIterator >= maxChartQuantity) {
 		    Window.alert(AppConstants.OnlyFiveCharts());
 		} else {
-		    checkZerosInTextBox(numberOfPointsTextBox);
-		    validateTextBox(numberOfPointsTextBox);
-		    validateTextBox(firstNumbersDownLimitTextBox);
+		    isPositiveIntTextBox(numberOfPointsTextBox);
+		    isIntTextBox(firstNumbersDownLimitTextBox);
+		    isIntTextBox(firstNumbersUpperLimitTextBox);
 		    compareTextBoxValues(firstNumbersDownLimitTextBox,
 			    firstNumbersUpperLimitTextBox);
 
@@ -399,6 +334,17 @@ public class App implements EntryPoint {
 				firstNumbersUpperLimitTextBox.getValue(),
 				linearChartType));
 		    } else if (chartTypeRadioButton2.getValue()) {
+			try {
+			    chartTabVerticalPanel.add(showDataSingleChart(
+				    chartTextTitleTextBox.getText(),
+				    chartTextSubtitleTextBox.getText(),
+				    xAxisTextBox.getText(),
+				    yAxisTextBox.getText(), linearChartType));
+			} catch (IOException e) {
+			    e.printStackTrace();
+			    Window.alert(e.toString().trim());
+			}
+		    } else if (chartTypeRadioButton3.getValue()) {
 			chartTabVerticalPanel.add(showSingleChart(
 				chartTextTitleTextBox.getText(),
 				chartTextSubtitleTextBox.getText(),
@@ -407,8 +353,20 @@ public class App implements EntryPoint {
 				firstNumbersDownLimitTextBox.getValue(),
 				firstNumbersUpperLimitTextBox.getValue(),
 				columnChartType));
-		    } else if (chartTypeRadioButton3.getValue()) {
-			validateTextBox(secondNumbersDownLimitTextBox);
+		    } else if (chartTypeRadioButton4.getValue()) {
+			try {
+			    chartTabVerticalPanel.add(showDataSingleChart(
+				    chartTextTitleTextBox.getText(),
+				    chartTextSubtitleTextBox.getText(),
+				    xAxisTextBox.getText(),
+				    yAxisTextBox.getText(), columnChartType));
+			} catch (IOException e) {
+			    e.printStackTrace();
+			    Window.alert(e.toString().trim());
+			}
+		    } else if (chartTypeRadioButton5.getValue()) {
+			isPositiveIntTextBox(secondNumbersDownLimitTextBox);
+			isPositiveIntTextBox(secondNumbersUpperLimitTextBox);
 			compareTextBoxValues(secondNumbersDownLimitTextBox,
 				secondNumbersUpperLimitTextBox);
 
@@ -422,27 +380,24 @@ public class App implements EntryPoint {
 				firstNumbersUpperLimitTextBox.getValue(),
 				secondNumbersDownLimitTextBox.getValue(),
 				secondNumbersUpperLimitTextBox.getValue()));
-		    } else if (chartTypeRadioButton4.getValue()) {
+		    } else if (chartTypeRadioButton6.getValue()) {
+			try {
+			    chartTabVerticalPanel.add(showDataDoubleCharts(
+				    chartTextTitleTextBox.getText(),
+				    chartTextSubtitleTextBox.getText(),
+				    xAxisTextBox.getText(),
+				    yAxisTextBox.getText(),
+				    anotherYAxisTextBox.getText()));
+			} catch (IOException e) {
+			    e.printStackTrace();
+			    Window.alert(e.toString().trim());
+			}
+		    } else if (chartTypeRadioButton7.getValue()) {
 			chartTabVerticalPanel.add(showLiveRandomChart(
 				chartTextTitleTextBox.getText(),
 				chartTextSubtitleTextBox.getText(),
 				xAxisTextBox.getText(), yAxisTextBox.getText()));
 		    }
-
-		    final Button closeChartButton = new Button(AppConstants
-			    .CloseChart());
-		    closeChartButton.setVisible(false);
-		    closeChartButton.addStyleName("closeChart");
-		    chartTabVerticalPanel.add(closeChartButton);
-
-		    closeChartButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-			    appTabPanel.selectTab(0);
-			    appTabPanel.remove(chartTabVerticalPanel);
-			    appTabPanel.getTabBar().removeTab(2);
-			}
-		    });
 		}
 	    }
 	});
@@ -471,7 +426,7 @@ public class App implements EntryPoint {
 		    secondNumbersUpperLimitTextBox.setVisible(false);
 		    firstChartColourLabel.setText(AppConstants
 			    .DataSeriesColour());
-		    yAxisTitleLabel.setText(AppConstants.YAxisTitle());
+		    yAxisTitleLabel.setText(AppConstants.YAxisTitle() + ":");
 		    anotherYAxisTitleLabel.setVisible(false);
 		    anotherYAxisTextBox.setVisible(false);
 		    secondChartColourLabel.setVisible(false);
@@ -483,7 +438,29 @@ public class App implements EntryPoint {
 	chartTypeRadioButton2.addClickHandler(new ClickHandler() {
 	    @Override
 	    public void onClick(ClickEvent event) {
-		if (chartTypeRadioButton2.isEnabled()) {
+		numberOfPointsLabel.setVisible(false);
+		numberOfPointsTextBox.setVisible(false);
+		firstNumbersDownLimitLabel.setVisible(false);
+		firstNumbersDownLimitTextBox.setVisible(false);
+		firstNumbersUpperLimitLabel.setVisible(false);
+		firstNumbersUpperLimitTextBox.setVisible(false);
+		secondNumbersDownLimitLabel.setVisible(false);
+		secondNumbersDownLimitTextBox.setVisible(false);
+		secondNumbersUpperLimitLabel.setVisible(false);
+		secondNumbersUpperLimitTextBox.setVisible(false);
+		firstChartColourLabel.setText(AppConstants.DataSeriesColour());
+		yAxisTitleLabel.setText(AppConstants.YAxisTitle() + ":");
+		anotherYAxisTitleLabel.setVisible(false);
+		anotherYAxisTextBox.setVisible(false);
+		secondChartColourLabel.setVisible(false);
+		secondChartColourVerticalPanel.setVisible(false);
+	    }
+	});
+
+	chartTypeRadioButton3.addClickHandler(new ClickHandler() {
+	    @Override
+	    public void onClick(ClickEvent event) {
+		if (chartTypeRadioButton3.isEnabled()) {
 		    numberOfPointsLabel.setVisible(true);
 		    numberOfPointsTextBox.setVisible(true);
 		    firstNumbersDownLimitLabel.setText(AppConstants
@@ -504,7 +481,7 @@ public class App implements EntryPoint {
 		    secondNumbersUpperLimitTextBox.setVisible(false);
 		    firstChartColourLabel.setText(AppConstants
 			    .DataSeriesColour());
-		    yAxisTitleLabel.setText(AppConstants.YAxisTitle());
+		    yAxisTitleLabel.setText(AppConstants.YAxisTitle() + ":");
 		    anotherYAxisTitleLabel.setVisible(false);
 		    anotherYAxisTextBox.setVisible(false);
 		    secondChartColourLabel.setVisible(false);
@@ -513,10 +490,32 @@ public class App implements EntryPoint {
 	    }
 	});
 
-	chartTypeRadioButton3.addClickHandler(new ClickHandler() {
+	chartTypeRadioButton4.addClickHandler(new ClickHandler() {
 	    @Override
 	    public void onClick(ClickEvent event) {
-		if (chartTypeRadioButton3.isEnabled()) {
+		numberOfPointsLabel.setVisible(false);
+		numberOfPointsTextBox.setVisible(false);
+		firstNumbersDownLimitLabel.setVisible(false);
+		firstNumbersDownLimitTextBox.setVisible(false);
+		firstNumbersUpperLimitLabel.setVisible(false);
+		firstNumbersUpperLimitTextBox.setVisible(false);
+		secondNumbersDownLimitLabel.setVisible(false);
+		secondNumbersDownLimitTextBox.setVisible(false);
+		secondNumbersUpperLimitLabel.setVisible(false);
+		secondNumbersUpperLimitTextBox.setVisible(false);
+		firstChartColourLabel.setText(AppConstants.DataSeriesColour());
+		yAxisTitleLabel.setText(AppConstants.YAxisTitle() + ":");
+		anotherYAxisTitleLabel.setVisible(false);
+		anotherYAxisTextBox.setVisible(false);
+		secondChartColourLabel.setVisible(false);
+		secondChartColourVerticalPanel.setVisible(false);
+	    }
+	});
+
+	chartTypeRadioButton5.addClickHandler(new ClickHandler() {
+	    @Override
+	    public void onClick(ClickEvent event) {
+		if (chartTypeRadioButton5.isEnabled()) {
 		    numberOfPointsLabel.setVisible(true);
 		    numberOfPointsTextBox.setVisible(true);
 		    firstNumbersDownLimitLabel.setText(AppConstants
@@ -555,10 +554,33 @@ public class App implements EntryPoint {
 	    }
 	});
 
-	chartTypeRadioButton4.addClickHandler(new ClickHandler() {
+	chartTypeRadioButton6.addClickHandler(new ClickHandler() {
 	    @Override
 	    public void onClick(ClickEvent event) {
-		if (chartTypeRadioButton4.isEnabled()) {
+		numberOfPointsLabel.setVisible(false);
+		numberOfPointsTextBox.setVisible(false);
+		firstNumbersDownLimitLabel.setVisible(false);
+		firstNumbersDownLimitTextBox.setVisible(false);
+		firstNumbersUpperLimitLabel.setVisible(false);
+		firstNumbersUpperLimitTextBox.setVisible(false);
+		secondNumbersDownLimitLabel.setVisible(false);
+		secondNumbersDownLimitTextBox.setVisible(false);
+		secondNumbersUpperLimitLabel.setVisible(false);
+		secondNumbersUpperLimitTextBox.setVisible(false);
+		firstChartColourLabel.setText(AppConstants
+			.FirstDataSeriesColour());
+		yAxisTitleLabel.setText(AppConstants.FirstYAxisTitle() + ":");
+		anotherYAxisTitleLabel.setVisible(true);
+		anotherYAxisTextBox.setVisible(true);
+		secondChartColourLabel.setVisible(true);
+		secondChartColourVerticalPanel.setVisible(true);
+	    }
+	});
+
+	chartTypeRadioButton7.addClickHandler(new ClickHandler() {
+	    @Override
+	    public void onClick(ClickEvent event) {
+		if (chartTypeRadioButton7.isEnabled()) {
 		    numberOfPointsLabel.setVisible(false);
 		    numberOfPointsTextBox.setVisible(false);
 		    firstNumbersDownLimitLabel.setVisible(false);
@@ -571,7 +593,7 @@ public class App implements EntryPoint {
 		    secondNumbersUpperLimitTextBox.setVisible(false);
 		    firstChartColourLabel.setText(AppConstants
 			    .DataSeriesColour());
-		    yAxisTitleLabel.setText(AppConstants.YAxisTitle());
+		    yAxisTitleLabel.setText(AppConstants.YAxisTitle() + ":");
 		    anotherYAxisTitleLabel.setVisible(false);
 		    anotherYAxisTextBox.setVisible(false);
 		    secondChartColourLabel.setVisible(false);
@@ -588,7 +610,6 @@ public class App implements EntryPoint {
 	});
 
 	yAxisTextBox.addClickHandler(new ClickHandler() {
-
 	    @Override
 	    public void onClick(ClickEvent event) {
 		yAxisTextBox.setText("");
@@ -612,12 +633,16 @@ public class App implements EntryPoint {
 	firstChartColourRadioButton1.addClickHandler(new ClickHandler() {
 	    @Override
 	    public void onClick(ClickEvent event) {
-		if (firstChartColourRadioButton1.isEnabled()) {
+		if (firstChartColourRadioButton1.getValue()) {
 		    secondChartColourRadioButton1.setVisible(true);
+		    secondChartColourRadioButton1.setEnabled(true);
 		    secondChartColourRadioButton1.setValue(true);
 		    secondChartColourRadioButton2.setVisible(true);
+		    secondChartColourRadioButton2.setEnabled(true);
 		    secondChartColourRadioButton3.setVisible(true);
+		    secondChartColourRadioButton3.setEnabled(true);
 		    secondChartColourRadioButton4.setVisible(true);
+		    secondChartColourRadioButton4.setEnabled(true);
 		    firstColour = firstDefaultColour;
 		    secondColour = secondDefaultColour;
 		}
@@ -627,12 +652,16 @@ public class App implements EntryPoint {
 	firstChartColourRadioButton2.addClickHandler(new ClickHandler() {
 	    @Override
 	    public void onClick(ClickEvent event) {
-		if (firstChartColourRadioButton2.isEnabled()) {
+		if (firstChartColourRadioButton2.getValue()) {
 		    secondChartColourRadioButton1.setVisible(true);
-		    secondChartColourRadioButton2.setVisible(false);
+		    secondChartColourRadioButton1.setEnabled(true);
+		    secondChartColourRadioButton2.setVisible(true);
+		    secondChartColourRadioButton2.setEnabled(false);
 		    secondChartColourRadioButton3.setVisible(true);
+		    secondChartColourRadioButton3.setEnabled(true);
 		    secondChartColourRadioButton3.setValue(true);
 		    secondChartColourRadioButton4.setVisible(true);
+		    secondChartColourRadioButton4.setEnabled(true);
 		    firstColour = redColour;
 		    secondColour = greenColour;
 		}
@@ -642,11 +671,15 @@ public class App implements EntryPoint {
 	firstChartColourRadioButton3.addClickHandler(new ClickHandler() {
 	    @Override
 	    public void onClick(ClickEvent event) {
-		if (firstChartColourRadioButton3.isEnabled()) {
+		if (firstChartColourRadioButton3.getValue()) {
 		    secondChartColourRadioButton1.setVisible(true);
+		    secondChartColourRadioButton1.setEnabled(true);
 		    secondChartColourRadioButton2.setVisible(true);
-		    secondChartColourRadioButton3.setVisible(false);
+		    secondChartColourRadioButton2.setEnabled(true);
+		    secondChartColourRadioButton3.setVisible(true);
+		    secondChartColourRadioButton3.setEnabled(false);
 		    secondChartColourRadioButton4.setVisible(true);
+		    secondChartColourRadioButton4.setEnabled(true);
 		    secondChartColourRadioButton4.setValue(true);
 		    firstColour = greenColour;
 		    secondColour = blueColour;
@@ -657,12 +690,16 @@ public class App implements EntryPoint {
 	firstChartColourRadioButton4.addClickHandler(new ClickHandler() {
 	    @Override
 	    public void onClick(ClickEvent event) {
-		if (firstChartColourRadioButton4.isEnabled()) {
+		if (firstChartColourRadioButton4.getValue()) {
 		    secondChartColourRadioButton1.setVisible(true);
-		    secondChartColourRadioButton1.setValue(true);
+		    secondChartColourRadioButton1.setEnabled(true);
 		    secondChartColourRadioButton2.setVisible(true);
+		    secondChartColourRadioButton2.setEnabled(true);
+		    secondChartColourRadioButton2.setValue(true);
 		    secondChartColourRadioButton3.setVisible(true);
-		    secondChartColourRadioButton4.setVisible(false);
+		    secondChartColourRadioButton3.setEnabled(true);
+		    secondChartColourRadioButton4.setVisible(true);
+		    secondChartColourRadioButton4.setEnabled(false);
 		    firstColour = blueColour;
 		    secondColour = redColour;
 		}
@@ -673,7 +710,21 @@ public class App implements EntryPoint {
 	    @Override
 	    public void onClick(ClickEvent event) {
 		if (secondChartColourRadioButton1.getValue()) {
+		    firstChartColourRadioButton1.setVisible(true);
+		    firstChartColourRadioButton1.setEnabled(true);
+		    firstChartColourRadioButton1.setValue(true);
+		    firstChartColourRadioButton2.setVisible(true);
+		    firstChartColourRadioButton2.setEnabled(true);
+		    firstChartColourRadioButton3.setVisible(true);
+		    firstChartColourRadioButton3.setEnabled(true);
+		    firstChartColourRadioButton4.setVisible(true);
+		    firstChartColourRadioButton4.setEnabled(true);
 		    secondColour = secondDefaultColour;
+		    firstColour = firstDefaultColour;
+		    secondChartColourRadioButton1.setEnabled(true);
+		    secondChartColourRadioButton2.setEnabled(true);
+		    secondChartColourRadioButton3.setEnabled(true);
+		    secondChartColourRadioButton4.setEnabled(true);
 		}
 	    }
 	});
@@ -682,7 +733,21 @@ public class App implements EntryPoint {
 	    @Override
 	    public void onClick(ClickEvent event) {
 		if (secondChartColourRadioButton2.getValue()) {
+		    firstChartColourRadioButton1.setVisible(true);
+		    firstChartColourRadioButton1.setEnabled(true);
+		    firstChartColourRadioButton2.setVisible(true);
+		    firstChartColourRadioButton2.setEnabled(false);
+		    firstChartColourRadioButton3.setVisible(true);
+		    firstChartColourRadioButton3.setEnabled(true);
+		    firstChartColourRadioButton3.setValue(true);
+		    firstChartColourRadioButton4.setVisible(true);
+		    firstChartColourRadioButton4.setEnabled(true);
 		    secondColour = redColour;
+		    firstColour = greenColour;
+		    secondChartColourRadioButton1.setEnabled(true);
+		    secondChartColourRadioButton2.setEnabled(true);
+		    secondChartColourRadioButton3.setEnabled(true);
+		    secondChartColourRadioButton4.setEnabled(true);
 		}
 	    }
 	});
@@ -691,7 +756,21 @@ public class App implements EntryPoint {
 	    @Override
 	    public void onClick(ClickEvent event) {
 		if (secondChartColourRadioButton3.getValue()) {
+		    firstChartColourRadioButton1.setVisible(true);
+		    firstChartColourRadioButton1.setEnabled(true);
+		    firstChartColourRadioButton2.setVisible(true);
+		    firstChartColourRadioButton2.setEnabled(true);
+		    firstChartColourRadioButton3.setVisible(true);
+		    firstChartColourRadioButton3.setEnabled(false);
+		    firstChartColourRadioButton4.setVisible(true);
+		    firstChartColourRadioButton4.setEnabled(true);
+		    firstChartColourRadioButton4.setValue(true);
 		    secondColour = greenColour;
+		    firstColour = blueColour;
+		    secondChartColourRadioButton1.setEnabled(true);
+		    secondChartColourRadioButton2.setEnabled(true);
+		    secondChartColourRadioButton3.setEnabled(true);
+		    secondChartColourRadioButton4.setEnabled(true);
 		}
 	    }
 	});
@@ -700,7 +779,21 @@ public class App implements EntryPoint {
 	    @Override
 	    public void onClick(ClickEvent event) {
 		if (secondChartColourRadioButton4.getValue()) {
+		    firstChartColourRadioButton1.setVisible(true);
+		    firstChartColourRadioButton1.setEnabled(true);
+		    firstChartColourRadioButton2.setVisible(true);
+		    firstChartColourRadioButton2.setEnabled(true);
+		    firstChartColourRadioButton2.setValue(true);
+		    firstChartColourRadioButton3.setVisible(true);
+		    firstChartColourRadioButton3.setEnabled(true);
+		    firstChartColourRadioButton4.setVisible(true);
+		    firstChartColourRadioButton4.setEnabled(false);
 		    secondColour = blueColour;
+		    firstColour = redColour;
+		    secondChartColourRadioButton1.setEnabled(true);
+		    secondChartColourRadioButton2.setEnabled(true);
+		    secondChartColourRadioButton3.setEnabled(true);
+		    secondChartColourRadioButton4.setEnabled(true);
 		}
 	    }
 	});
@@ -740,7 +833,6 @@ public class App implements EntryPoint {
 	    String numberOfPoints, String xAxisText, String yAxisText,
 	    String pointsDownLimit, String pointsUpperLimit, Type chartType) {
 	final Chart singleChart = new Chart();
-	singleChart.addStyleName("chart");
 	singleChart.setType(chartType);
 	final ChartTitle columnChartTitle = new ChartTitle();
 	columnChartTitle.setText(chartTitle);
@@ -800,17 +892,80 @@ public class App implements EntryPoint {
 	};
 	singleChart.setClickEventHandler(addSinglePointChartClickEventHandler);
 
-	Scheduler scheduler = Scheduler.get();
-	scheduler.scheduleDeferred(new ScheduledCommand() {
+	return singleChart;
+    }
+
+    final public Chart showDataSingleChart(String chartTitle,
+	    String chartSubtitle, String xAxisText, String yAxisText,
+	    Type chartType) throws IOException {
+	final Chart dataChart = new Chart();
+	dataChart.setType(chartType);
+	final ChartTitle columnChartTitle = new ChartTitle();
+	columnChartTitle.setText(chartTitle);
+	dataChart.setChartTitle(columnChartTitle);
+	final ChartSubtitle columnChartSubtitle = new ChartSubtitle();
+	columnChartSubtitle.setText(chartSubtitle);
+	dataChart.setChartSubtitle(columnChartSubtitle);
+	dataChart.setZoomType(BaseChart.ZoomType.X_AND_Y);
+	final AxisTitle xTextAxisTitle = new AxisTitle();
+	xTextAxisTitle.setText(xAxisText);
+	dataChart.getXAxis().setAxisTitle(xTextAxisTitle);
+	final AxisTitle yTextAxisTitle = new AxisTitle();
+	yTextAxisTitle.setText(yAxisText);
+	dataChart.getYAxis().setAxisTitle(yTextAxisTitle);
+	dataChart.setBackgroundColor(backgroundColour);
+	dataChart.setAnimation(true);
+
+	final Series singleSeries = dataChart.createSeries();
+	firstDataPointsService.getDataPoints(new AsyncCallback<Number[]>() {
 	    @Override
-	    public void execute() {
-		singleChart.setSizeToMatchContainer();
-		singleChart.redraw();
-		// singleChart.setSize(1300, 500, true);
+	    public void onFailure(Throwable caught) {
+		Window.alert(caught.toString().trim());
+	    }
+
+	    @Override
+	    public void onSuccess(Number[] result) {
+		singleSeries.setPoints(result);
 	    }
 	});
+	final SeriesPlotOptions seriesSeriesPlotOptions = new SeriesPlotOptions();
+	seriesSeriesPlotOptions.setColor(firstColour);
+	singleSeries.setPlotOptions(seriesSeriesPlotOptions);
+	dataChart.addSeries(singleSeries);
 
-	return singleChart;
+	final SeriesPlotOptions deleteSinglePointSeriesPlotOptions = new SeriesPlotOptions();
+	deleteSinglePointSeriesPlotOptions.setLineWidth(1);
+	final PointClickEventHandler deletePointClickEventHandler = new PointClickEventHandler() {
+	    @Override
+	    public boolean onClick(PointClickEvent pointClickEvent) {
+		final Series currentSeries = dataChart
+			.getSeries(pointClickEvent.getSeriesId());
+
+		if (currentSeries.getPoints().length > 1) {
+		    pointClickEvent.getPoint().remove();
+		} else if (currentSeries.getPoints().length == 1) {
+		    Window.alert(AppConstants.DeleteLastPointAlert());
+		}
+
+		return true;
+	    }
+	};
+	deleteSinglePointSeriesPlotOptions
+		.setPointClickEventHandler(deletePointClickEventHandler);
+	dataChart.setSeriesPlotOptions(deleteSinglePointSeriesPlotOptions);
+
+	final ChartClickEventHandler addSinglePointChartClickEventHandler = new ChartClickEventHandler() {
+	    @Override
+	    public boolean onClick(ChartClickEvent chartClickEvent) {
+		singleSeries.addPoint(chartClickEvent.getXAxisValue(),
+			chartClickEvent.getYAxisValue());
+
+		return true;
+	    }
+	};
+	dataChart.setClickEventHandler(addSinglePointChartClickEventHandler);
+
+	return dataChart;
     }
 
     public Chart showDoubleCharts(String chartTitle, String chartSubtitle,
@@ -877,7 +1032,91 @@ public class App implements EntryPoint {
 		Integer.parseInt(pointsDownLimitSecond),
 		Integer.parseInt(pointsUpperLimitSecond)));
 	final SplinePlotOptions y1SplinePlotOptions = new SplinePlotOptions();
-	y1SplinePlotOptions.setColor(firstColour);
+	y1SplinePlotOptions.setColor(secondColour);
+	y1Series.setPlotOptions(y1SplinePlotOptions);
+	y1Series.setType(linearChartType);
+	doubleChart.addSeries(y1Series);
+
+	return doubleChart;
+    }
+
+    public Chart showDataDoubleCharts(String chartTitle, String chartSubtitle,
+	    String xAxisText, String firstYAxisText, String secondYAxisText)
+	    throws IOException {
+	final Chart doubleChart = new Chart();
+	final ChartTitle doubleChartTitle = new ChartTitle();
+	doubleChartTitle.setText(chartTitle);
+	doubleChart.setChartTitle(doubleChartTitle);
+	final ChartSubtitle doubleChartSubtitle = new ChartSubtitle();
+	doubleChartSubtitle.setText(chartSubtitle);
+	doubleChart.setChartSubtitle(doubleChartSubtitle);
+	doubleChart.setZoomType(BaseChart.ZoomType.X_AND_Y);
+	final Legend doubleLegend = new Legend();
+	doubleLegend.setLayout(Legend.Layout.VERTICAL);
+	doubleLegend.setAlign(Legend.Align.LEFT);
+	doubleLegend.setVerticalAlign(Legend.VerticalAlign.TOP);
+	doubleLegend.setX(70);
+	doubleLegend.setY(45);
+	doubleLegend.setFloating(true);
+	doubleLegend.setBackgroundColor(whiteColour);
+	doubleLegend.setBorderColor(firstDefaultColour);
+	doubleLegend.setBorderWidth(1);
+	doubleChart.setLegend(doubleLegend);
+	final AxisTitle xTextAxisTitle = new AxisTitle();
+	xTextAxisTitle.setText(xAxisText);
+	doubleChart.getXAxis().setAxisTitle(xTextAxisTitle);
+	final AxisTitle y0AxisTitle = new AxisTitle();
+	final YAxisLabels y0AxisLabels = new YAxisLabels();
+	final Style y0Style = new Style();
+	y0Style.setColor(firstColour);
+	y0AxisLabels.setStyle(y0Style);
+	y0AxisTitle.setText(firstYAxisText);
+	doubleChart.getYAxis(0).setLabels(y0AxisLabels);
+	doubleChart.getYAxis(0).setAxisTitle(y0AxisTitle);
+	final AxisTitle y1AxisTitle = new AxisTitle();
+	final YAxisLabels y1AxisLabels = new YAxisLabels();
+	final Style y1Style = new Style();
+	y1Style.setColor(secondColour);
+	y1AxisLabels.setStyle(y1Style);
+	y1AxisTitle.setText(secondYAxisText);
+	doubleChart.getYAxis(1).setLabels(y1AxisLabels);
+	doubleChart.getYAxis(1).setAxisTitle(y1AxisTitle);
+	doubleChart.getYAxis(1).setOpposite(true);
+	doubleChart.setBackgroundColor(backgroundColour);
+
+	final Series y0Series = doubleChart.createSeries();
+	firstDataPointsService.getDataPoints(new AsyncCallback<Number[]>() {
+	    @Override
+	    public void onFailure(Throwable caught) {
+		Window.alert(caught.toString().trim());
+	    }
+
+	    @Override
+	    public void onSuccess(Number[] result) {
+		y0Series.setPoints(result);
+	    }
+	});
+	final ColumnPlotOptions y0ColumnPlotOptions = new ColumnPlotOptions();
+	y0ColumnPlotOptions.setColor(firstColour);
+	y0Series.setPlotOptions(y0ColumnPlotOptions);
+	y0Series.setType(columnChartType);
+	y0Series.setYAxis(1);
+	doubleChart.addSeries(y0Series);
+
+	final Series y1Series = doubleChart.createSeries();
+	secondDataPointsService.getDataPoints(new AsyncCallback<Number[]>() {
+	    @Override
+	    public void onFailure(Throwable caught) {
+		Window.alert(caught.toString().trim());
+	    }
+
+	    @Override
+	    public void onSuccess(Number[] result) {
+		y1Series.setPoints(result);
+	    }
+	});
+	final SplinePlotOptions y1SplinePlotOptions = new SplinePlotOptions();
+	y1SplinePlotOptions.setColor(secondColour);
 	y1Series.setPlotOptions(y1SplinePlotOptions);
 	y1Series.setType(linearChartType);
 	doubleChart.addSeries(y1Series);
@@ -937,22 +1176,27 @@ public class App implements EntryPoint {
 	return liveRandomChart;
     }
 
-    public void validateTextBox(TextBox currentTextBox) {
-	String inputString = currentTextBox.getText().trim();
+    public void isPositiveIntTextBox(TextBox currentTextBox) {
+	String inputString = currentTextBox.getText();
 
-	if (!inputString.matches(regexString)) {
-	    if (inputString.equals("")) {
-		Window.alert(AppConstants.EmptyString());
-		Window.Location.reload();
-	    } else {
-		Window.alert("'" + inputString + "' "
-			+ AppConstants.InvalidSymbol());
-		Window.Location.reload();
-	    }
+	if (!inputString.matches(positiveIntRegexString)) {
+	    Window.alert("'" + inputString + "' "
+		    + AppConstants.InvalidSymbol());
+	    Window.Location.reload();
 	}
     }
 
-    public void checkZerosInTextBox(TextBox currentTextBox) {
+    public void isIntTextBox(TextBox currentTextBox) {
+	String inputString = currentTextBox.getText();
+
+	if (!inputString.matches(positiveIntRegexString)) {
+	    Window.alert("'" + inputString + "' "
+		    + AppConstants.InvalidSymbol());
+	    Window.Location.reload();
+	}
+    }
+
+    public void isZeroTextBox(TextBox currentTextBox) {
 	if (Integer.parseInt(currentTextBox.getValue()) <= 0) {
 	    Window.alert("'" + currentTextBox.getValue() + "' "
 		    + AppConstants.InvalidSymbol());
@@ -968,7 +1212,7 @@ public class App implements EntryPoint {
 		    + AppConstants.InvalidSymbol());
 	    Window.Location.reload();
 	} else {
-	    validateTextBox(secondTextBox);
+	    isPositiveIntTextBox(secondTextBox);
 	}
     }
 }
