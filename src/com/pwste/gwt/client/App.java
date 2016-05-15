@@ -64,12 +64,12 @@ public class App implements EntryPoint {
     final static Type columnChartType = Series.Type.COLUMN;
 
     final static String positiveIntRegexString = "^[0-9]([0-9]*)$";
-    // final static String allIntRegexString = "^-?[0-9]([0-9]*)$";
-    final static String allIntRegexString = "^-?[0-9]\\d*(\\.\\d+)?$";
+    final static String allIntRegexString = "^-?[0-9]([0-9]*)$";
+    // final static String allIntRegexString = "^-?[0-9]\\d*(\\.\\d+)?$";
     final static String emptyRegexString = "^\\s*$";
 
     int chartIterator = 0;
-    int maxChartQuantity = 10;
+    final int maxChartQuantity = 10;
 
     private final AppConstants AppConstants = GWT.create(AppConstants.class);
     protected static FirstDataPointsAsync firstDataPointsService = GWT
@@ -300,6 +300,7 @@ public class App implements EntryPoint {
 		    Window.alert(AppConstants.OnlyTenCharts());
 		} else {
 		    isPositiveIntTextBox(numberOfPointsTextBox);
+		    isZeroTextBox(numberOfPointsTextBox);
 		    isIntTextBox(firstNumbersDownLimitTextBox);
 		    isIntTextBox(firstNumbersUpperLimitTextBox);
 		    compareTextBoxValues(firstNumbersDownLimitTextBox,
@@ -365,8 +366,8 @@ public class App implements EntryPoint {
 			    Window.alert(e.toString().trim());
 			}
 		    } else if (chartTypeRadioButton5.getValue()) {
-			isPositiveIntTextBox(secondNumbersDownLimitTextBox);
-			isPositiveIntTextBox(secondNumbersUpperLimitTextBox);
+			isIntTextBox(secondNumbersDownLimitTextBox);
+			isIntTextBox(secondNumbersUpperLimitTextBox);
 			compareTextBoxValues(secondNumbersDownLimitTextBox,
 				secondNumbersUpperLimitTextBox);
 
@@ -1191,7 +1192,7 @@ public class App implements EntryPoint {
     public void isIntTextBox(TextBox currentTextBox) {
 	String inputString = currentTextBox.getText();
 
-	if (!inputString.matches(positiveIntRegexString)) {
+	if (!inputString.matches(allIntRegexString)) {
 	    Window.alert("'" + inputString + "' "
 		    + AppConstants.InvalidSymbol());
 	    Window.Location.reload();
@@ -1213,8 +1214,6 @@ public class App implements EntryPoint {
 	    Window.alert("'" + firstTextBox.getValue() + "' "
 		    + AppConstants.InvalidSymbol());
 	    Window.Location.reload();
-	} else {
-	    isPositiveIntTextBox(secondTextBox);
 	}
     }
 }
